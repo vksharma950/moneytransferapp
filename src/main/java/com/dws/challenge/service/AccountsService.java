@@ -26,8 +26,6 @@ public class AccountsService {
 	@Getter
 	private final NotificationService notificationService;
 
-	private static final Object objLock = new Object();
-
 	@Autowired
 	public AccountsService(AccountsRepository accountsRepository, NotificationService notificationService) {
 		this.accountsRepository = accountsRepository;
@@ -67,11 +65,7 @@ public class AccountsService {
 					ErrorCode.ACCOUNT_ERROR);
 		}
 		
-		int hashFrom = System.identityHashCode(accountFrom);
-		int hashTo = System.identityHashCode(accountTo);
-		
-		
-		if(hashFrom < hashTo) {
+		if(accountFrom.getBalance().compareTo(accountTo.getBalance()) > 0) {
 			synchronized (accountFrom) {
 				synchronized (accountTo) {
 					withdrawAccountBalance(accountFrom, 
@@ -81,7 +75,7 @@ public class AccountsService {
 					response.setStatus(TransferStatus.COMPLETED);
 				}	
 			}
-		}else if(hashFrom > hashTo) {
+		}else {
 			synchronized (accountTo) {
 				synchronized (accountFrom) {
 					withdrawAccountBalance(accountFrom, 
@@ -90,18 +84,6 @@ public class AccountsService {
 							accountTo.getBalance(), transferRequest);
 					response.setStatus(TransferStatus.COMPLETED);
 				}	
-			}
-		}else {
-			synchronized (objLock) {
-				synchronized (accountFrom) {
-					synchronized (accountTo) {
-						withdrawAccountBalance(accountFrom, 
-								accountFrom.getBalance(), transferRequest);
-						depositAccountBalance(accountTo, 
-								accountTo.getBalance(), transferRequest);
-						response.setStatus(TransferStatus.COMPLETED);
-					}	
-				}
 			}
 		}
 		if(response.getStatus().equals(TransferStatus.COMPLETED)) {
