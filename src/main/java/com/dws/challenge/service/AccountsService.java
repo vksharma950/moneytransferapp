@@ -14,7 +14,6 @@ import lombok.Getter;
 import java.math.BigDecimal;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 @Service
@@ -40,9 +39,6 @@ public class AccountsService {
 		return this.accountsRepository.getAccount(accountId);
 	}
 
-	// Adding transaction to avoid dirty read problem.
-	// Adding Reeantrent lock to transfer money in parallel in vise-virsa accounts.
-	@Transactional
 	public TransferResponse transferAmount(TransferRequest transferRequest)
 			throws AccountNotExistException, DuplicateAccountIdException {
 		
