@@ -61,7 +61,7 @@ public class AccountsService {
 					ErrorCode.ACCOUNT_ERROR);
 		}
 		
-		if(accountFrom.getBalance().compareTo(accountTo.getBalance()) > 0) {
+		if(accountFrom.getAccountId().compareTo(accountTo.getAccountId()) > 0) {
 			synchronized (accountFrom) {
 				synchronized (accountTo) {
 					withdrawAccountBalance(accountFrom, 
