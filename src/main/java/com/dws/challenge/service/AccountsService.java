@@ -54,31 +54,32 @@ public class AccountsService {
 			throw new AccountNotExistException("AccountFrom or AccountTo is not available.", ErrorCode.ACCOUNT_ERROR);
 		}
 		
-		if (accountFrom.getBalance().compareTo(transferRequest.getAmount()) < 0) {
-			response.setStatus(TransferStatus.FAILED);
-			throw new OverDraftException(
-					"Account with id:" + accountFrom.getAccountId() + " does not have enough balance to transfer.",
-					ErrorCode.ACCOUNT_ERROR);
-		}
-		
 		if(accountFrom.getAccountId().compareTo(accountTo.getAccountId()) > 0) {
 			synchronized (accountFrom) {
 				synchronized (accountTo) {
-					withdrawAccountBalance(accountFrom, 
-							accountFrom.getBalance(), transferRequest);
-					depositAccountBalance(accountTo, 
-							accountTo.getBalance(), transferRequest);
-					response.setStatus(TransferStatus.COMPLETED);
+					if (accountFrom.getBalance().compareTo(transferRequest.getAmount()) < 0) {
+						response.setStatus(TransferStatus.FAILED);
+						throw new OverDraftException(
+								"Account with id:" + accountFrom.getAccountId() + " does not have enough balance to transfer.",
+								ErrorCode.ACCOUNT_ERROR);
+					}else {
+						transfer(accountTo, accountFrom, transferRequest);
+						response.setStatus(TransferStatus.COMPLETED);
+					}	
 				}	
 			}
 		}else {
 			synchronized (accountTo) {
 				synchronized (accountFrom) {
-					withdrawAccountBalance(accountFrom, 
-							accountFrom.getBalance(), transferRequest);
-					depositAccountBalance(accountTo, 
-							accountTo.getBalance(), transferRequest);
-					response.setStatus(TransferStatus.COMPLETED);
+					if (accountFrom.getBalance().compareTo(transferRequest.getAmount()) < 0) {
+						response.setStatus(TransferStatus.FAILED);
+						throw new OverDraftException(
+								"Account with id:" + accountFrom.getAccountId() + " does not have enough balance to transfer.",
+								ErrorCode.ACCOUNT_ERROR);
+					}else {
+						transfer(accountTo, accountFrom, transferRequest);
+						response.setStatus(TransferStatus.COMPLETED);
+					}
 				}	
 			}
 		}
@@ -88,6 +89,12 @@ public class AccountsService {
 		  }
 		
 		return response;
+	}
+	
+	//Perform amount settlement in both account.
+	private void transfer(Account accountFrom, Account accountTo, TransferRequest request) {
+		depositAccountBalance(accountTo, accountTo.getBalance(), request);
+		withdrawAccountBalance(accountFrom, accountFrom.getBalance(), request);
 	}
 
 	// performs calculation of final amount after deposit and then persist the
