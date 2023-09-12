@@ -57,29 +57,13 @@ public class AccountsService {
 		if(accountFrom.getAccountId().compareTo(accountTo.getAccountId()) > 0) {
 			synchronized (accountFrom) {
 				synchronized (accountTo) {
-					if (accountFrom.getBalance().compareTo(transferRequest.getAmount()) < 0) {
-						response.setStatus(TransferStatus.FAILED);
-						throw new OverDraftException(
-								"Account with id:" + accountFrom.getAccountId() + " does not have enough balance to transfer.",
-								ErrorCode.ACCOUNT_ERROR);
-					}else {
-						transfer(accountTo, accountFrom, transferRequest);
-						response.setStatus(TransferStatus.COMPLETED);
-					}	
+						transfer(accountTo, accountFrom, transferRequest, response);	
 				}	
 			}
 		}else {
 			synchronized (accountTo) {
 				synchronized (accountFrom) {
-					if (accountFrom.getBalance().compareTo(transferRequest.getAmount()) < 0) {
-						response.setStatus(TransferStatus.FAILED);
-						throw new OverDraftException(
-								"Account with id:" + accountFrom.getAccountId() + " does not have enough balance to transfer.",
-								ErrorCode.ACCOUNT_ERROR);
-					}else {
-						transfer(accountTo, accountFrom, transferRequest);
-						response.setStatus(TransferStatus.COMPLETED);
-					}
+						transfer(accountTo, accountFrom, transferRequest, response);
 				}	
 			}
 		}
@@ -92,9 +76,16 @@ public class AccountsService {
 	}
 	
 	//Perform amount settlement in both account.
-	private void transfer(Account accountFrom, Account accountTo, TransferRequest request) {
+	private void transfer(Account accountFrom, Account accountTo, TransferRequest request, TransferResponse response) {
+		if (accountFrom.getBalance().compareTo(request.getAmount()) < 0) {
+			response.setStatus(TransferStatus.FAILED);
+			throw new OverDraftException(
+					"Account with id:" + accountFrom.getAccountId() + " does not have enough balance to transfer.",
+					ErrorCode.ACCOUNT_ERROR);
+		}
 		depositAccountBalance(accountTo, accountTo.getBalance(), request);
 		withdrawAccountBalance(accountFrom, accountFrom.getBalance(), request);
+		response.setStatus(TransferStatus.COMPLETED);
 	}
 
 	// performs calculation of final amount after deposit and then persist the
